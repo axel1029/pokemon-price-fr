@@ -1,0 +1,55 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Set {
+  id          Int     @id @default(autoincrement())
+  name        String
+  code        String  @unique
+  releaseYear Int?
+  language    String  @default("FR")
+
+  cards Card[]
+}
+
+model Card {
+  id        Int      @id @default(autoincrement())
+  externalId String  @unique 
+  name      String
+  cardNumber    String
+  rarity    String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+
+  setId     Int
+  set       Set      @relation(fields: [setId], references: [id])
+
+  prices    Price[]
+}
+
+model Price {
+  id        Int      @id @default(autoincrement())
+  price     Float
+  source    String
+  kind      String
+  day       String
+  currency  String   @default("EUR")
+  createdAt DateTime @default(now())
+
+  cardId Int
+  card   Card @relation(fields: [cardId], references: [id])
+
+  @@index([cardId, createdAt])
+  @@unique([cardId, source, currency, kind, day])
+}
+
+model SyncState{
+  key       String @id
+  value     String?
+  updatedAt DateTime @default(now()) @updatedAt
+}
