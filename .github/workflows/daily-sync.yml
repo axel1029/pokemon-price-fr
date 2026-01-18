@@ -1,0 +1,30 @@
+name: Daily Sync (prices + images)
+
+on:
+  schedule:
+    # Tous les jours à 03:10 UTC (ajuste si tu veux)
+    - cron: "10 3 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call refresh-images (small batch)
+        env:
+          API: ${{ secrets.RENDER_API_URL }}
+          KEY: ${{ secrets.ADMIN_KEY }}
+        run: |
+          curl -sS -X POST "$API/api/admin/sync/refresh-images?limit=300" \
+            -H "x-admin-key: $KEY" \
+            -H "Content-Type: application/json"
+
+      - name: Call refresh-prices (optional)
+        env:
+          API: ${{ secrets.RENDER_API_URL }}
+          KEY: ${{ secrets.ADMIN_KEY }}
+        run: |
+          curl -sS -X POST "$API/api/admin/sync/refresh-prices" \
+            -H "x-admin-key: $KEY" \
+            -H "Content-Type: application/json"

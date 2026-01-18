@@ -1,0 +1,19 @@
+name: Weekly Import New Cards
+
+on:
+  schedule:
+    - cron: "0 4 * * 1" # lundi 04:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call import (limited)
+        env:
+          API: ${{ secrets.RENDER_API_URL }}
+          KEY: ${{ secrets.ADMIN_KEY }}
+        run: |
+          curl -sS -X POST "$API/api/admin/sync/import?limit=500" \
+            -H "x-admin-key: $KEY" \
+            -H "Content-Type: application/json"
