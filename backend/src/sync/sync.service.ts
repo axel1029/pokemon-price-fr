@@ -288,4 +288,63 @@ export class SyncService {
 
     this.logger.log(`Daily refresh done (${inserted} prices)`);
   }
+
+  async refreshPricesNow(limit?: number) {
+    const day = this.getTodayKey();
+    this.logger.log(`refreshPricesNow: start (day=${day}, limit=${limit ?? 'ALL'})`);
+
+    const cards = await this.prisma.card.findMany({
+      select: { id: true, externalId: true },
+      ...(limit ? { take: limit } : {}),
+    });
+
+    let inserted = 0;
+    let checked = 0;
+    let skipped404 = 0;
+
+    for (const c of cards) {
+      checked++;
+
+      let apiCard: any;
+      try {
+        apiCard = await this.tcgdex.getCard(c.externalId);
+      } catch (err: any) {
+        if (err?.response?.status === 404) skipped404++;
+        continue;
+      }
+
+      const cm = apiCard?.pricing?.cardmarket;
+      if (!cm || cm.unit !== 'EUR') continue;
+
+      const rows = [
+        { kind: 'trend', value: cm.trend },
+        { kind: 'avg7', value: cm.avg7 },
+        { kind: 'avg30', value: cm.avg30 },
+        { kind: 'low', value: cm.low },
+      ]
+        .filter((e) => typeof e.value === 'number' && Number.isFinite(e.value))
+        .map((e) => ({
+          price: e.value as number,
+          currency: 'EUR',
+          source: 'CARDMARKET',
+          kind: e.kind,
+          day,
+          cardId: c.id,
+        }));
+
+      if (!rows.length) continue;
+
+      // ✅ IMPORTANT : évite les doublons grâce à @@unique
+      const res = await this.prisma.price.createMany({
+        data: rows,
+        skipDuplicates: true,
+      });
+
+      inserted += res.count;
+    }
+
+    this.logger.log(`refreshPricesNow: done (checked=${checked}, inserted=${inserted}, skipped404=${skipped404})`);
+    return { day, checked, inserted, skipped404 };
+  }
+
 }

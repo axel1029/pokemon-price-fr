@@ -18,4 +18,10 @@ export class SyncController {
   refreshImages(@Query('limit') limit?: string) {
     return this.sync.refreshMissingImages(limit ? Number(limit) : 500);
   }
+
+  @UseGuards(AdminKeyGuard)
+  @Post('refresh-prices')
+  refreshPrices() {
+    return this.sync.refreshPricesNow(); // on crée cette méthode
+  }
 }
