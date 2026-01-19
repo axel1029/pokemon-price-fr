@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const API_BASE = `${API_URL}/api`;
 
 async function safeJson<T>(res: Response): Promise<T | null> {
@@ -7,7 +7,7 @@ async function safeJson<T>(res: Response): Promise<T | null> {
 
   try {
     return JSON.parse(text) as T;
-  } catch (e) {
+  } catch {
     console.error('JSON parse failed:', {
       url: res.url,
       status: res.status,
@@ -29,15 +29,9 @@ export type CardsResponse = {
 };
 
 export async function getCard(cardId: number) {
-  const res = await fetch(`${API_BASE}/cards/${cardId}`, {
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Erreur API getCard (${res.status})`);
-  }
-
-  return res.json();
+  const res = await fetch(`${API_BASE}/cards/${cardId}`, { cache: 'no-store' });
+  if (!res.ok) return null;
+  return safeJson<any>(res);
 }
 
 export async function getCards(
@@ -51,35 +45,30 @@ export async function getCards(
     ...(search ? { search } : {}),
   });
 
-  const res = await fetch(`${API_BASE}/cards?${qs.toString()}`, {
-    cache: 'no-store',
-  });
-
+  const res = await fetch(`${API_BASE}/cards?${qs.toString()}`, { cache: 'no-store' });
   if (!res.ok) return null;
-  return res.json();
+
+  return safeJson<CardsResponse>(res);
 }
 
 export async function getCardPrices(cardId: number) {
-  const res = await fetch(`${API_BASE}/pokemon/prices/${cardId}`, {
-    cache: 'no-store',
-  });
+  const res = await fetch(`${API_BASE}/pokemon/prices/${cardId}`, { cache: 'no-store' });
   if (!res.ok) return [];
-  const data = await res.json();
+
+  const data = await safeJson<any>(res);
   return Array.isArray(data) ? data : [];
 }
 
 export async function getCardStats(cardId: number) {
-  const res = await fetch(`${API_BASE}/pokemon/prices/${cardId}/stats`, {
-    cache: 'no-store',
-  });
+  const res = await fetch(`${API_BASE}/pokemon/prices/${cardId}/stats`, { cache: 'no-store' });
   if (!res.ok) return null;
-  return res.json();
+
+  return safeJson<any>(res);
 }
 
 export async function getLatestPrice(cardId: number) {
-  const res = await fetch(`${API_BASE}/pokemon/prices/${cardId}/latest`, {
-    cache: 'no-store',
-  });
+  const res = await fetch(`${API_BASE}/pokemon/prices/${cardId}/latest`, { cache: 'no-store' });
   if (!res.ok) return null;
-  return res.json();
+
+  return safeJson<any>(res);
 }
