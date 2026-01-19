@@ -16,7 +16,7 @@ jobs:
           API: ${{ secrets.RENDER_API_URL }}
           KEY: ${{ secrets.ADMIN_KEY }}
         run: |
-          curl -sS -X POST "$API/api/admin/sync/refresh-images?limit=300" \
+          curl -fsS -X POST "$API/api/admin/sync/refresh-images?limit=300" \
             -H "x-admin-key: $KEY" \
             -H "Content-Type: application/json"
 
@@ -25,6 +25,6 @@ jobs:
           API: ${{ secrets.RENDER_API_URL }}
           KEY: ${{ secrets.ADMIN_KEY }}
         run: |
-          curl -sS -X POST "$API/api/admin/sync/refresh-prices" \
+          curl -fsS -X POST "$API/api/admin/sync/refresh-prices" \
             -H "x-admin-key: $KEY" \
             -H "Content-Type: application/json"
