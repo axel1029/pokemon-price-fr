@@ -1,7 +1,21 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const API_BASE = `${API_URL}/api`;
 
-console.log('API_URL=', process.env.NEXT_PUBLIC_API_URL);
+async function safeJson<T>(res: Response): Promise<T | null> {
+  const text = await res.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    console.error('JSON parse failed:', {
+      url: res.url,
+      status: res.status,
+      textPreview: text.slice(0, 200),
+    });
+    return null;
+  }
+}
 
 export type CardsResponse = {
   meta: {

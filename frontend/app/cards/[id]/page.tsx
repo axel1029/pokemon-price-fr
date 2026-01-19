@@ -44,6 +44,10 @@ export default async function CardPage({
   const stats = (statsRaw ?? null) as StatsResponse | null;
   const latest = latestRaw ?? null;
 
+  if (!stats) {
+    return <div className="p-6">Pas de stats disponibles</div>;
+  }
+
   return (
     <main className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Carte #{cardId}</h1>
